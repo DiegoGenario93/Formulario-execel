@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Formulário</title>
+    <style>
+        body {
+            color: gray;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .form-container {
+            margin-top: 30px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Formulario</h1>
+        <div class="form-container">
+            <form id="form" class="row g-3">
+                <div class="col-md-6">
+                    <label for="linha" class="form-label">Equipamento:</label>
+                    <input type="text" class="form-control" id="linha" name="linha" placeholder="Digite o equipamento">
+                </div>
+                <div class="col-md-6">
+                    <label for="pecas" class="form-label">Peças:</label>
+                    <input type="text" class="form-control" id="pecas" name="pecas" placeholder="Digite a peça">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary mt-3">Adicionar</button>
+                </div>
+            </form>
+        </div>
+        <hr>
+        <h1>Relação de peças:</h1>
+        <div class="table-container">
+            <table id="tabela" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Equipamento</th>
+                        <th>Peças</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela">
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-success mt-3" onclick="exportarParaExcel()">Exportar para Excel</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.0/xlsx.full.min.js"></script>
+
+    <script>
+        // Função para adicionar os dados à tabela
+        function adicionarDados(linha, pecas) {
+            var tabela = document.getElementById("corpo-tabela");
+            var novaLinha = tabela.insertRow();
+            var celulaLinha = novaLinha.insertCell(0);
+            var celulaPecas = novaLinha.insertCell(1);
+            var celulaAcao = novaLinha.insertCell(2);
+            celulaLinha.innerHTML = linha;
+            celulaPecas.innerHTML = pecas;
+            celulaAcao.innerHTML = '<button class="btn btn-danger btn-sm" onclick="removerLinha(this)">Remover</button>';
+        }
+
+        // Função para salvar os dados no localStorage
+        function salvarDados() {
+            var dados = [];
+            var linhas = document.querySelectorAll("#corpo-tabela tr");
+            linhas.forEach(function(linha) {
+                var dadosLinha = {
+                    linha: linha.cells[0].innerText,
+                    pecas: linha.cells[1].innerText
+                };
+                dados.push(dadosLinha);
+            });
+            localStorage.setItem("dadosTabela", JSON.stringify(dados));
+        }
+
+        // Função para carregar os dados da tabela do localStorage
+        function carregarDados() {
+            var dados = localStorage.getItem("dadosTabela");
+            if (dados) {
+                dados = JSON.parse(dados);
+                dados.forEach(function(dado) {
+                    adicionarDados(dado.linha, dado.pecas);
+                });
+            }
+        }
+
+        // Carrega os dados ao carregar a página
+        window.onload = function() {
+            carregarDados();
+        };
+
+        // Adiciona os dados ao enviar o formulário
+        document.getElementById("form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var linha = document.getElementById("linha").value;
+            var pecas = document.getElementById("pecas").value;
+            adicionarDados(linha, pecas);
+            salvarDados();
+            // Limpa os campos do formulário após adicionar os dados
+            document.getElementById("linha").value = "";
+            document.getElementById("pecas").value = "";
+        });
+
+        // Função para remover uma linha da tabela
+        function removerLinha(botao) {
+            var linhaARemover = botao.parentNode.parentNode;
+            linhaARemover.parentNode.removeChild(linhaARemover);
+            salvarDados();
+        }
+
+        // Função para exportar os dados para Excel
+        function exportarParaExcel() {
+            var wb = XLSX.utils.table_to_book(document.getElementById('tabela'));
+            XLSX.writeFile(wb, 'tabela.xlsx');
+        }
+    </script>
+</body>
+</html>
+
